@@ -1,0 +1,66 @@
+    {% load staticfiles %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+        <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/css/bootstrap.min.css" rel="stylesheet">
+        <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/3.0.0/css/font-awesome.min.css" rel="stylesheet">
+        <link href="{% static "nemik/css/main.css" %}" rel="stylesheet" type="text/css" media="screen">
+        <style>
+            body {
+                margin: 0px;
+                overflow: hidden;
+            }
+        </style>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/bootstrap.min.js"></script>
+        <script src="https://raw.github.com/mrdoob/stats.js/master/build/stats.min.js"></script>
+
+        <!--
+        <script src="http://static.ateoto.com.s3.amazonaws.com/nemik/js/libs/pixi.js"></script>
+        -->
+        <script src="{% static "nemik/js/libs/pixi/Pixi.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/Point.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/Rectangle.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/utils/Utils.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/utils/EventTarget.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/utils/gl-matrix-min.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/renderers/WebGLShaders.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/renderers/WebGLRenderer.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/renderers/WebGLBatch.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/renderers/CanvasRenderer.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/DisplayObject.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/DisplayObjectContainer.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/Stage.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/Sprite.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/extras/Strip.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/extras/Rope.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/MovieClip.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/textures/BaseTexture.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/textures/Texture.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/utils/Detector.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/loaders/SpriteSheetLoader.js" %}"></script>
+        <script src="{% static "nemik/js/libs/pixi/loaders/AssetLoader.js" %}"></script>
+
+        <script src="{% static "nemik/js/test.js" %}"></script>
+
+        <title>Nemik Test</title>
+    </head>
+    <body>
+        <div id="render-target" asset-url="{% static "nemik" %}"></div>
+        <div id="about" class="modal hide">
+            <div class="modal-header">
+                <h3>Welcome to Nemik Test</h3>
+            </div>
+            <div class="modal-body">
+            <p>This is the result of an hour or two of messing around with <a href="https://github.com/GoodBoyDigital/pixi.js">pixi.js</a>. Not a lot works yet. It's pretty much Chrom[e/ium] only. Waiting on <a href="https://github.com/GoodBoyDigital/pixi.js">pixi.js</a> to do RenderTextures before I actually load any map files. Currenty the map is just a single static image. No bounding, no collision detection. If you hook up a gamepad you can move with the D-Pad and Slash with X (PS3) or A (Xbox 360). It's possible none of this will work for you.</p>
+            </div>
+            <div class="modal-footer">
+            <a id="close-about" href="#" class="btn">Close</a>
+            </div>
+        </div>
+    </body>
+</html>

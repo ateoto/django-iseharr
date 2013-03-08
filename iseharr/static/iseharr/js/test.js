@@ -49,7 +49,7 @@ window.onorientationchange = resize;
 var asset_url;
 
 $(function() {
-	socket = io.connect('http://23.20.193.8');
+	socket = io.connect('http://ateoto.com:8080');
 
 	socket.on("chat", function(message) {
 		$('#messages').append('<li>' + message.sender + ': ' + message.message + '</li>');
@@ -70,7 +70,7 @@ $(function() {
 
 	socket.on('pc-move-ack', function(data) {
 		if (data.pc.username == character.username) {
-			character.position = character.animation.position = data.pc.position;
+			character.position = character.animation.position =data.pc.position;
 		} else {
 			_.each(characters, function(character){
 				if (character.username == data.pc.username) {

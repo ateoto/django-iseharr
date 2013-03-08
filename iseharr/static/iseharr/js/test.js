@@ -70,7 +70,7 @@ $(function() {
 
 	socket.on('pc-move-ack', function(data) {
 		if (data.pc.username == character.username) {
-			character.position = data.pc.position;
+			character.position = character.animation.position = data.pc.position;
 		} else {
 			_.each(characters, function(character){
 				if (character.username == data.pc.username) {

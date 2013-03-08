@@ -105,7 +105,7 @@ PIXI.Texture.fromImage = function(imageUrl, crossorigin)
 		{
 			console.log('Loading from image: ' + crossorigin);
 			var image = new Image();//new Image();
-			if (crossorigin) image.crossOrigin = '';
+			image.crossOrigin = '';
 			image.src = imageUrl;
 			console.log(image);
 			baseTexture = new PIXI.BaseTexture(image);

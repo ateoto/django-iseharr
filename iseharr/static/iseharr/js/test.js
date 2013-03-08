@@ -382,11 +382,11 @@ function update() {
 		container.addChildAt(walk_cycle_s_anim, 1)
 	});
 
-	walk_cycle_n_anim.position = character.position;
-	walk_cycle_e_anim.position = character.position;
-	walk_cycle_s_anim.position = character.position;
-	walk_cycle_w_anim.position = character.position;
-	slash_e_anim.position = character.position;
+	//walk_cycle_n_anim.position = character.position;
+	//walk_cycle_e_anim.position = character.position;
+	//walk_cycle_s_anim.position = character.position;
+	//walk_cycle_w_anim.position = character.position;
+	//slash_e_anim.position = character.position;
 
 	container.addChildAt(character.animation, 1);
 

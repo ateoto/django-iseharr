@@ -1,4 +1,5 @@
 var stats = new Stats();
+var walk_cycle_s_down;
 var walk_cycle_s_anim;
 var walk_cycle_n_anim;
 var walk_cycle_e_anim;
@@ -7,12 +8,16 @@ var slash_n_anim;
 var slash_s_anim;
 var slash_e_anim;
 var slash_w_anim;
+var other_character;
 
 var timestamp;
 
 var toggle_char_zoom = false;
 
+var socket;
+
 var character = {
+	username: username,
 	position: new PIXI.Point(576,280),
 	direction: 's',
 	animations: {
@@ -32,10 +37,10 @@ var character = {
 	is_walking: false,
 	animation: null,
 	is_attacking: false,
-}
+};
 
+var characters = [];
 var keyState = {};
-
 var has_GamePad;
 
 $(window).resize(resize)
@@ -44,6 +49,44 @@ window.onorientationchange = resize;
 var asset_url;
 
 $(function() {
+	socket = io.connect('http://ateoto.com:9000');
+
+	socket.on("chat", function(message) {
+		$('#messages').append('<li>' + message.sender + ': ' + message.message + '</li>');
+	});
+
+	socket.on('user-joined', function(data){
+		var new_character = new PIXI.Sprite(walk_cycle_s_down);
+		data.pc.sprite = new_character;
+		data.pc.sprite.position = data.pc.position;
+		characters.push(data.pc);
+		console.log(data.pc.username + ' joined the game. :)');
+		container.addChildAt(data.pc.sprite, 1);
+	});
+
+	socket.on('user-left', function(data) {
+		console.log(data.pc.username + ' left the game. :(');
+	});
+
+	socket.on('pc-move-ack', function(data) {
+		if (data.pc.username == character.username) {
+			character.position = data.pc.position;
+		} else {
+			_.each(characters, function(character){
+				if (character.username == data.pc.username) {
+					character.position = character.sprite.position = data.pc.position;
+				}
+			});
+		}
+	});
+
+	$("#message-form").submit(function(ev) {
+		ev.preventDefault();
+		socket.emit("chat", $("#message-input").val());
+		$("#message-input").val("");
+	});
+
+
 	stats.setMode(0);
 	stats.domElement.style.position = 'absolute';
 	stats.domElement.style.left = '0px';
@@ -140,6 +183,8 @@ function onAssetsLoaded() {
 		slash_w.push(texture_w);
 	}
 
+	walk_cycle_s_down = walk_cycle_s[0];
+
 	walk_cycle_n_anim = new PIXI.MovieClip(walk_cycle_n);
 	walk_cycle_n_anim.position.x = 0;
 	walk_cycle_n_anim.animationSpeed = 0.2;
@@ -196,6 +241,23 @@ function onAssetsLoaded() {
 
 	character.animation = character.animations.walk.south;
 
+	socket.emit('join', username, function(successful, users) {
+		if (successful) {
+			console.log('Connected to server');
+			_.each(users, function(user) {
+				if (user.username == character.username) {
+					console.log('Its just me.');
+				} else {
+					var new_character = new PIXI.Sprite(walk_cycle_s_down);
+					user.sprite = new_character;
+					user.sprite.position = user.position;
+					characters.push(user);
+					container.addChildAt(user.sprite, 1);
+				}
+			});
+		}
+	});
+
 	requestAnimFrame(update);
 }
 
@@ -238,6 +300,7 @@ function update() {
 
 		character.direction = 'n';
 		character.position.y -= 1;
+		socket.emit('pc-move', character.position);
 	} else {
 		walk_cycle_n_anim.gotoAndStop(0);
 	}
@@ -256,6 +319,7 @@ function update() {
 
 		character.direction = 's';
 		character.position.y += 1;
+		socket.emit('pc-move', character.position);
 	} else {
 		walk_cycle_s_anim.gotoAndStop(0);
 	}
@@ -274,6 +338,7 @@ function update() {
 
 		character.direction = 'w';
 		character.position.x -= 1;
+		socket.emit('pc-move', character.position);
 	} else {
 		walk_cycle_w_anim.gotoAndStop(0);
 	}
@@ -292,6 +357,7 @@ function update() {
 
 		character.direction = 'e';
 		character.position.x += 1;
+		socket.emit('pc-move', character.position);
 	} else {
 		walk_cycle_e_anim.gotoAndStop(0);
 	}
@@ -310,6 +376,11 @@ function update() {
 	if (slash_e_anim.currentFrame >= 5) {
 		slash_e_anim.gotoAndStop(0);
 	}
+
+	_.each(characters, function(c) {
+		walk_cycle_s_anim.position = c.position;
+		container.addChildAt(walk_cycle_s_anim, 1)
+	});
 
 	walk_cycle_n_anim.position = character.position;
 	walk_cycle_e_anim.position = character.position;

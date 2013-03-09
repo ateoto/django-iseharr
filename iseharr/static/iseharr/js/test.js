@@ -49,7 +49,7 @@ window.onorientationchange = resize;
 var asset_url;
 
 $(function() {
-	socket = io.connect('http://localhost', {resource: 'socket'});
+	socket = io.connect('http://ateoto.com', {resource: 'socket'});
 
 	socket.on("chat", function(message) {
 		$('#messages').append('<li>' + message.sender + ': ' + message.message + '</li>');

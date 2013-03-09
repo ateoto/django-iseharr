@@ -1,4 +1,4 @@
-var stats = new Stats();
+	var stats = new Stats();
 var walk_cycle_s_down;
 var walk_cycle_s_anim;
 var walk_cycle_n_anim;
@@ -49,7 +49,7 @@ window.onorientationchange = resize;
 var asset_url;
 
 $(function() {
-	socket = io.connect('http://ateoto.com:8080');
+	socket = io.connect('http://ateoto.com/socket');
 
 	socket.on("chat", function(message) {
 		$('#messages').append('<li>' + message.sender + ': ' + message.message + '</li>');

@@ -4,9 +4,9 @@ $(function() {
 	me.position.x = 576;
 	me.position.y = 280;
 
-	//me.socket = new WebSocket('ws://localhost:8080');
-    var host = window.document.location.host.replace(/:.*/, '');
-	me.socket = new WebSocket('ws://' + host + '/socket');
+	me.socket = new WebSocket('ws://localhost:8080/socket');
+    //var host = window.document.location.host.replace(/:.*/, '');
+	//me.socket = new WebSocket('ws://' + host + '/socket');
 
 	me.socket.onopen = function() {
 		var data = {
@@ -32,6 +32,8 @@ $(function() {
 	}
 
 	me.chat = function(message) {
+		console.log(this.socket);
+
 		var data = {
 			type: 'chat',
 			data: {

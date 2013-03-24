@@ -16,6 +16,12 @@ var toggle_char_zoom = false;
 
 var socket;
 
+var me = new Iseharr.PlayerCharacter('ateoto');
+me.position.x = 576;
+me.position.y = 280;
+
+console.log(me);
+
 var character = {
     username: username,
     position: new PIXI.Point(576,280),
@@ -51,8 +57,8 @@ var asset_url;
 $(function() {
     var host = window.document.location.host.replace(/:.*/, '');
     
-    socket = io.connect('http://' + host + '/socket');
-    //socket = io.connect('http://localhost:8080/socket');
+    //socket = io.connect('http://' + host + '/socket');
+    socket = io.connect('http://localhost:8080/socket');
 
     socket.on("chat", function(message) {
         $('#messages').append('<li>' + message.sender + ': ' + message.message + '</li>');

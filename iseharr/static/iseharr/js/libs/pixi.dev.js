@@ -24,14 +24,14 @@ PIXI.Point = function(x, y)
 	 * @type Number
 	 * @default 0
 	 */
-	this.x = x ? x : 0;
+	this.x = x || 0;
 	
 	/**
 	 * @property y
 	 * @type Number
 	 * @default 0
 	 */
-	this.y = y ? y : 0;
+	this.y = y || 0;
 }
 
 /** 
@@ -66,28 +66,28 @@ PIXI.Rectangle = function(x, y, width, height)
 	 * @type Number
 	 * @default 0
 	 */
-	this.x = x ? x : 0;
+	this.x = x || 0;
 	
 	/**
 	 * @property y
 	 * @type Number
 	 * @default 0
 	 */
-	this.y = y ? y : 0;
+	this.y = y || 0;
 	
 	/**
 	 * @property width
 	 * @type Number
 	 * @default 0
 	 */
-	this.width = width ? width : 0;
+	this.width = width || 0;
 	
 	/**
 	 * @property height
 	 * @type Number
 	 * @default 0
 	 */
-	this.height = height ? height : 0;
+	this.height = height || 0;
 }
 
 /** 
@@ -203,9 +203,8 @@ PIXI.DisplayObject.prototype.updateTransform = function()
 	
 		///AAARR GETTER SETTTER!
 	
-	this.localTransform[2] = this.position.x;
-	this.localTransform[5] = this.position.y;
-	
+	this.localTransform[2] = ~~ (this.position.x + 0.5);
+	this.localTransform[5] = ~~ (this.position.y + 0.5);
 
 	// TODO optimize?
 	mat3.multiply(this.localTransform, this.parent.worldTransform, this.worldTransform);
@@ -523,7 +522,7 @@ PIXI.Sprite.prototype.setInteractive = function(interactive)
 	this.interactive = interactive;
 	// TODO more to be done here..
 	// need to sort out a re-crawl!
-	if(stage)stage.dirty = true;
+	if(this.stage)this.stage.dirty = true;
 }
 
 /**
@@ -611,13 +610,6 @@ PIXI.MovieClip = function(textures)
 	 * @type Boolean
 	 */
 	this.playing;
-
-	/**
-	 * [read only] indicates if the MovieClip should only play through once
-	 * @property playOnce
-	 * @type Boolean
-	 */
-	this.playingOnce = false;
 }
 
 // constructor
@@ -641,18 +633,6 @@ PIXI.MovieClip.prototype.play = function()
 {
 	this.playing = true;
 }
-
-/**
- * Plays the MovieClip once and stops
- * @method play
- */
-
- PIXI.MovieClip.prototype.playOnce = function()
- {
- 	this.playing = true;
- 	this.playingOnce = true;
- }
-
 
 /**
  * Stops the MovieClip and goes to a specific frame
@@ -681,23 +661,13 @@ PIXI.MovieClip.prototype.gotoAndPlay = function(frameNumber)
 PIXI.MovieClip.prototype.updateTransform = function()
 {
 	PIXI.Sprite.prototype.updateTransform.call(this);
-
+	
 	if(!this.playing)return;
-
+	
 	this.currentFrame += this.animationSpeed;
 	var round = (this.currentFrame + 0.5) | 0;
-	var frames = this.textures.length;
-	this.setTexture(this.textures[round % frames]);
-	if (this.playingOnce)
-	{
-		if ((round / frames) >= 1)
-		{
-			this.playingOnce = false;
-			this.gotoAndStop(0);
-		}
-	}
-}
-/**
+	this.setTexture(this.textures[round % this.textures.length]);
+}/**
  * @author Mat Groves http://matgroves.com/ @Doormat23
  */
 
@@ -928,12 +898,19 @@ PIXI.InteractionManager.prototype.onMouseDown = function(event)
 
 PIXI.InteractionManager.prototype.onMouseUp = function(event)
 {
+	if(this.currentOver)
+	{
+		this.mouse.target = this.currentOver;
+		if(this.currentOver.mouseup)this.currentOver.mouseup(this.mouse);	
+	}
+	
 	if(this.currentDown)
 	{
 		this.mouse.target = this.currentDown;
-		if(this.currentDown.mouseup)this.currentDown.mouseup(this.mouse);	
+		// click!
+		if(this.currentOver == this.currentDown)if(this.currentDown.click)this.currentDown.click(this.mouse);
 		
-		if(this.currentOver == this.currentDown)if(this.currentDown.click)this.currentDown.click(this.mouse);	
+	
 		this.currentDown = null;
 	}
 }
@@ -1074,7 +1051,7 @@ PIXI.Stage = function(backgroundColor, interactive)
 	this.stage=  this;
 	
 	// interaction!
-	this.interactive = interactive ? true : false;
+	this.interactive = !!interactive;
 	this.interactionManager = new PIXI.InteractionManager(this);
 	
 	this.setBackgroundColor(backgroundColor);
@@ -1115,7 +1092,7 @@ PIXI.Stage.prototype.updateTransform = function()
  */
 PIXI.Stage.prototype.setBackgroundColor = function(backgroundColor)
 {
-	this.backgroundColor = backgroundColor ? backgroundColor : 0x000000;
+	this.backgroundColor = backgroundColor || 0x000000;
 	this.backgroundColorSplit = HEXtoRGB(this.backgroundColor);
 	this.backgroundColorString =  "#" + this.backgroundColor.toString(16);
 }
@@ -1441,10 +1418,10 @@ PIXI._defaultFrame = new PIXI.Rectangle(0,0,1,1);
  */
 PIXI.WebGLRenderer = function(width, height, view)
 {
-	this.width = width ? width : 800;
-	this.height = height ? height : 600;
+	this.width = width || 800;
+	this.height = height || 600;
 	
-	this.view = view ? view : document.createElement( 'canvas' ); 
+	this.view = view || document.createElement( 'canvas' ); 
     this.view.width = this.width;
 	this.view.height = this.height;  
 	this.view.background = "#FF0000";
@@ -1553,8 +1530,6 @@ PIXI.WebGLRenderer.prototype.checkVisibility = function(displayObject, globalVis
 			// update texture!!
 		}
 		
-		
-		
 		if(child.cacheVisible != actualVisibility)
 		{
 			child.cacheVisible = actualVisibility;
@@ -1573,8 +1548,6 @@ PIXI.WebGLRenderer.prototype.checkVisibility = function(displayObject, globalVis
 		{
 			this.checkVisibility(child, actualVisibility);
 		}
-		
-		
 	};
 }
 
@@ -1593,15 +1566,9 @@ PIXI.WebGLRenderer.prototype.render = function(stage)
 	for (var i=0; i < stage.__childrenRemoved.length; i++)
 	{
 		this.removeDisplayObject(stage.__childrenRemoved[i]);
-		//	stage.__childrenRemoved[i].cacheVisible = false;
 	}
-	/*
-	// no add all new sprites		
-	for (var i=0; i < stage.__childrenAdded.length; i++) 
-	{
-		stage.__childrenAdded[i].cacheVisible = false;
-//		this.addDisplayObject(stage.__childrenAdded[i]);
-	}*/
+
+
 	// update any textures	
 	for (var i=0; i < PIXI.texturesToUpdate.length; i++) this.updateTexture(PIXI.texturesToUpdate[i]);
 	
@@ -1613,7 +1580,7 @@ PIXI.WebGLRenderer.prototype.render = function(stage)
 	// recursivly loop through all items!
 	this.checkVisibility(stage, true);
 	
-	// update the scen graph	
+	// update the scene graph	
 	stage.updateTransform();
 	
 	var gl = this.gl;
@@ -2699,14 +2666,14 @@ PIXI.CanvasRenderer = function(width, height, view)
 	 * @type Number
 	 * @default 800
 	 */
-	this.width = width ? width : 800;
+	this.width = width || 800;
 	/**
 	 * The height of the canvas view
 	 * @property height
 	 * @type Number
 	 * @default 600
 	 */
-	this.height = height ? height : 600;
+	this.height = height || 600;
 	
 	this.refresh = true;
 	
@@ -2715,7 +2682,7 @@ PIXI.CanvasRenderer = function(width, height, view)
 	 * @property view
 	 * @type Canvas
 	 */
-	this.view = view ? view : document.createElement( 'canvas' ); 
+	this.view = view || document.createElement( 'canvas' ); 
 	
 	// hack to enable some hardware acceleration!
 	//this.view.style["transform"] = "translatez(0)";

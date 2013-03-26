@@ -2,6 +2,7 @@ var stats = new Stats();
 var keyState = {};
 var has_GamePad;
 var last_time;
+var player;
 
 $(function() {
     // Bind to events.
@@ -18,40 +19,44 @@ $(function() {
     document.body.appendChild( stats.domElement );
 
     // Setup Player
-    var me = new Iseharr.PlayerCharacter(username);
-    me.position.x = 576;
-    me.position.y = 280;
+    player = new Iseharr.PlayerCharacter(username);
+    player.position.x = 576;
+    player.position.y = 280;
 
     // Start socket. This really needs to go somewhere else.
-    me.socket = new WebSocket('ws://localhost:8080/socket');
+    player.socket = new WebSocket('ws://localhost:8080/socket');
 
     //var host = window.document.location.host.replace(/:.*/, '');
-    //me.socket = new WebSocket('ws://' + host + '/socket');
+    //player.socket = new WebSocket('ws://' + host + '/socket');
 
-    me.socket.onopen = function() {
+    player.socket.onopen = function() {
         var data = {
             type: 'connect',
-            data: { 'username': me.username, 'position': me.position }
+            data: { 'username': player.username, 'position': player.position }
         }
-        me.socket.send(JSON.stringify(data));
+        player.socket.send(JSON.stringify(data));
     }
 
-    me.socket.onmessage = function(event) {
+    player.socket.onmessage = function(event) {
         var msg = JSON.parse(event.data);
         if (msg.type === 'chat') {
             $('#messages').append('<li>' + msg.data.username + ': ' + msg.data.text + '</li>');
             console.log(msg.data.username + ':', msg.data.text);
         }
         if (msg.type === 'connect-ack') {
-            me.uuid = msg.data.uuid;
-            console.log(me);
+            player.uuid = msg.data.uuid;
+            console.log(player);
         }
         if (msg.type === 'connect-fail') {
             console.log('Fail');
         }
+        if (msg.type === 'position-update') {
+            //console.log(msg.data.position, player.position);
+            player.position = msg.data.position;
+        }
     }
 
-    me.chat = function(message) {
+    player.chat = function(message) {
         console.log(this.socket);
 
         var data = {
@@ -82,7 +87,7 @@ $(function() {
     var asset_list = [
         asset_url + '/img/map_bg.png', 
         asset_url + '/img/map_fg.png', 
-        asset_url + '/img/spritesheet.json'
+        asset_url + '/img/character.json'
     ];
 
     loader = new PIXI.AssetLoader(asset_list);
@@ -99,6 +104,50 @@ function onAssetsLoaded() {
     var map_fg = new PIXI.Sprite(map_fg_texture);
 
     container.addChild(map_bg);
+
+    var walk_cycle_n = [];
+    var walk_cycle_s = [];
+    var walk_cycle_e = [];
+    var walk_cycle_w = [];
+
+    var slash_n = [];
+    var slash_s = [];
+    var slash_e = [];
+    var slash_w = [];
+
+    for (var i=0; i < 8; i++) {
+        var texture_n = PIXI.Texture.fromFrame("walkcycle_north_" + i + ".png");
+        var texture_s = PIXI.Texture.fromFrame("walkcycle_south_" + i + ".png");
+        var texture_e = PIXI.Texture.fromFrame("walkcycle_east_" + i + ".png");
+        var texture_w = PIXI.Texture.fromFrame("walkcycle_west_" + i + ".png");
+        walk_cycle_n.push(texture_n);
+        walk_cycle_s.push(texture_s);
+        walk_cycle_e.push(texture_e);
+        walk_cycle_w.push(texture_w);
+    };
+
+    for (var i=0; i < 5; i++) {
+        var texture_n = PIXI.Texture.fromFrame("slash_north_" + i + ".png");
+        var texture_s = PIXI.Texture.fromFrame("slash_south_" + i + ".png");
+        var texture_e = PIXI.Texture.fromFrame("slash_east_" + i + ".png");
+        var texture_w = PIXI.Texture.fromFrame("slash_west_" + i + ".png");
+        slash_n.push(texture_n);
+        slash_s.push(texture_s);
+        slash_e.push(texture_e);
+        slash_w.push(texture_w);
+    }
+
+    walk_cycle_s_anim = new PIXI.MovieClip(walk_cycle_s);
+    walk_cycle_s_anim.position.x = 0;
+    walk_cycle_s_anim.animationSpeed = 0.2;
+    walk_cycle_s_anim.visible = true;
+    container.addChild(walk_cycle_s_anim);
+    player.animations.walk_south = walk_cycle_s_anim;
+    player.current_animation = player.animations.walk_south;
+    console.log(player);
+
+    container.addChild(player.current_animation);
+
     container.addChild(map_fg);
 
     last_time = new Date().getTime();
@@ -113,6 +162,39 @@ function updateKeyState(e) {
     }
 }
 
+handle_input = function(gamepad, time, dt) {
+    var direction = new PIXI.Point(0,0);
+    var moving = false;
+
+    // North
+    if (gamepad.buttons[12] > 0 || keyState[87]) {
+        direction.y = -1;
+        moving = true;
+    }
+    // South
+    if (gamepad.buttons[13] > 0 || keyState[83]) {
+        direction.y = 1;
+        moving = true;
+    }
+    // West
+    if (gamepad.buttons[14] > 0 || keyState[65]) {
+        direction.x = -1;
+        moving = true;
+    }
+    // East
+    if (gamepad.buttons[15] > 0 || keyState[68]) {
+        direction.x = 1;
+        moving = true;
+    }
+
+    if (moving) {
+        player.move(direction, time);
+    } else {
+        player.stop_move(time);
+    }
+
+}
+
 function resize() {
     var width = $(window).width(); 
     var height = $(window).height();
@@ -122,9 +204,18 @@ function resize() {
 
 function update(time) {
     stats.begin();
+
+    var gamepad = navigator.webkitGetGamepads && navigator.webkitGetGamepads()[0];
+
+    if (typeof gamepad == 'undefined') {
+        gamepad = {};
+        gamepad.buttons = [];
+    }
+
     var dt = time - last_time; //Note that last_time is initialized priorly
     last_time = time;
-    console.log(dt);
+    handle_input(gamepad, time, dt);
+    player.update(dt);
     renderer.render(stage);
     requestAnimFrame(update);
     stats.end();
